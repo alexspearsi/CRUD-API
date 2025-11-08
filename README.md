@@ -1,1 +1,1 @@
-# CRUD-API
+Instructions for installing, running and using the application
