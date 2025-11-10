@@ -2,7 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
 
 type User = {
-  id?: string,
+  id: string,
   username: string,
   age: number,
   hobbies: string[]
@@ -35,43 +35,39 @@ const users: User[] = [
   }
 ];
 
+function sendResponse(res: ServerResponse, statusCode: number, data: unknown) {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(data));
+}
+
 export function userRouter(req: IncomingMessage, res: ServerResponse) {
   const url = req.url;
   const method = req.method;
 
-  // GET
+  // GET USERS
   if (url === '/api/users' && method === 'GET') {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(users));
+    sendResponse(res, 200, users);
     return;
   }
 
   // GET USER
   if (url?.startsWith('/api/users/') && method === 'GET') {
-    const parts = url.split('/');
-    const userID = parts[3];
+    const userId = url.split('/')[3];
 
-    if (!uuidValidate(userID)) {
-      res.statusCode = 400;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ message: 'Invalid data' }))
+    if (!uuidValidate(userId)) {
+      sendResponse(res, 400, { message: 'Invalid user ID' });
       return
     }
 
-    const user = users.find(user => user.id === userID);
-    console.log(user);
+    const user = users.find(user => user.id === userId);
 
     if (!user) {
-      res.statusCode = 404;
-      res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify({ message: 'User with this ID doesn\'t exist' }))
+      sendResponse(res, 404, { message: 'User with this ID doesn\'t exist' });
       return;
     }
 
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(user))
+    sendResponse(res, 200, user);
     return;
   }
 
@@ -94,37 +90,72 @@ export function userRouter(req: IncomingMessage, res: ServerResponse) {
           typeof age !== 'number' ||
           !Array.isArray(hobbies)
         ) {
-          res.statusCode = 400;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ message: 'Missing required fields'}))
+          sendResponse(res, 400, { message: 'Missing required fields'});
           return;
         }
 
         const newUser: User = {
+          id: uuidv4(),
           username,
           age,
           hobbies,
-          id: uuidv4()
         }
 
         users.push(newUser);
 
-        res.statusCode = 201;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(newUser));
+        sendResponse(res, 201, newUser);
       } catch {
-        res.statusCode = 400;
-        res.end(JSON.stringify({ message: 'Invalid JSON'}))
+        sendResponse(res, 400, { message: 'Invalid JSON'});
       }
- 
+    })
+    
+    return;
+  }
+
+  // PUT USER
+  if (url?.startsWith('/api/users/') && method === 'PUT') {
+    const userId = url.split('/')[3];
+
+    if (!uuidValidate(userId)) {
+      sendResponse(res, 400, { message: 'Invalid user ID' });
+      return;
+    }
+
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk;
+    })
+
+    req.on('end', () => {
+      try {
+        const updatedData = JSON.parse(body);
+
+        if (
+          (updatedData.username && typeof updatedData.username !== 'string') ||
+          (updatedData.age && typeof updatedData.age !== 'number') ||
+          (updatedData.hobbies && !Array.isArray(updatedData.hobbies))
+        ) {
+          sendResponse(res, 400, { message: 'Invalid fields' });
+          return;
+        }
+
+        const userIndex = users.findIndex(u => u.id === userId);
+
+        if (userIndex === -1) {
+          sendResponse(res, 404, { message: 'User with this ID doesn\'t exist' });
+          return;
+        }
+
+        users[userIndex] = { ...users[userIndex], ...updatedData };
+
+        sendResponse(res, 200, users[userIndex]);
+      } catch {
+        sendResponse(res, 400, { message: 'Invalid JSON' });
+      }
     })
 
     return;
   }
-
-
-
-  res.statusCode = 404;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify({ message: 'Route not found' }));
+  
+  sendResponse(res, 404, { message: 'Route not found' });
 }
