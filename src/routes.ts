@@ -3,31 +3,27 @@ import { IncomingMessage, ServerResponse } from 'http';
 const users = [
   {
     id: 1,
-    name: 'Alex',
+    username: 'Alex',
     age: 25,
-    email: 'alex@example.com',
-    isActive: true
+    hobbies: ['drawing', 'basketball']
   },
   {
     id: 2,
-    name: 'Maria',
+    username: 'Maria',
     age: 30,
-    email: 'maria@example.com',
-    isActive: false
+    hobbies: ['football']
   },
   {
     id: 3,
-    name: 'John',
+    username: 'John',
     age: 28,
-    email: 'john@example.com',
-    isActive: true
+    hobbies: ['swimming']
   },
   {
     id: 4,
-    name: 'Anna',
+    username: 'Anna',
     age: 22,
-    email: 'anna@example.com',
-    isActive: true
+    hobbies: ['tennis']
   }
 ];
 
@@ -36,10 +32,36 @@ export function userRouter(req: IncomingMessage, res: ServerResponse) {
   const method = req.method;
 
   if (url === '/api/users' && method === 'GET') {
-
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(users));
+    return;
+  }
+
+  if (url?.startsWith('/api/users/') && method === 'GET') {
+    const parts = url.split('/');
+    const userID = Number(parts[3]);
+
+    if (isNaN(userID)) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ message: 'Invalid data' }))
+      return
+    }
+
+    const user = users.find(user => user.id === userID);
+    console.log(user);
+
+    if (!user) {
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify({ message: 'User with this ID doesn\'t exist' }))
+      return;
+    }
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(user))
     return;
   }
 
