@@ -1,0 +1,38 @@
+{
+  "name": "crud-api",
+  "version": "1.0.0",
+  "description": "Instructions for installing, running and using the application",
+  "homepage": "https://github.com/alexspearsi/CRUD-API#readme",
+  "bugs": {
+    "url": "https://github.com/alexspearsi/CRUD-API/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexspearsi/CRUD-API.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start:dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
+    "start:prod": "cross-env NODE_ENV=production tsc && node dist/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.0",
+    "@types/uuid": "^10.0.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3"
+  }
+}
